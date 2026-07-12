@@ -122,11 +122,15 @@
 
     let data, error;
     try {
-      const result = await supabase
+      const queryPromise = supabase
         .from("tags")
         .select("*")
         .eq("tag_id", tagId)
         .maybeSingle();
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Request timed out after 8 seconds")), 8000)
+      );
+      const result = await Promise.race([queryPromise, timeoutPromise]);
       data = result.data;
       error = result.error;
     } catch (e) {

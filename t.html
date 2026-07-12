@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Tagback</title>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
   * { box-sizing: border-box; }
   body {
@@ -108,69 +106,49 @@
 
   const params = new URLSearchParams(window.location.search);
   const tagId = params.get("id");
-  let supabase;
+
+  const headers = {
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: "Bearer " + SUPABASE_ANON_KEY,
+    "Content-Type": "application/json",
+  };
 
   async function init() {
-   try {
-    if (typeof window.supabase === "undefined") {
-      document.getElementById("loading").innerHTML =
-        '<p class="error msg">Could not load Supabase library. Check your internet connection and try again.</p>';
-      return;
-    }
-
-    if (typeof SUPABASE_URL === "undefined" || typeof SUPABASE_ANON_KEY === "undefined") {
-      document.getElementById("loading").innerHTML =
-        '<p class="error msg">SUPABASE_URL or KEY is missing/broken — check for curly quotes in that line.</p>';
-      return;
-    }
-
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    if (!tagId) {
-      document.getElementById("loading").innerHTML =
-        '<p class="error msg">No tag ID in the link. Try scanning the QR code again.</p>';
-      return;
-    }
-
-    let data, error;
     try {
-      const queryPromise = supabase
-        .from("tags")
-        .select("*")
-        .eq("tag_id", tagId)
-        .maybeSingle();
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Request timed out after 8 seconds")), 8000)
+      if (!tagId) {
+        document.getElementById("loading").innerHTML =
+          '<p class="error msg">No tag ID in the link. Try scanning the QR code again.</p>';
+        return;
+      }
+
+      const res = await fetch(
+        SUPABASE_URL + "/rest/v1/tags?tag_id=eq." + encodeURIComponent(tagId) + "&select=*",
+        { headers }
       );
-      const result = await Promise.race([queryPromise, timeoutPromise]);
-      data = result.data;
-      error = result.error;
+
+      if (!res.ok) {
+        const text = await res.text();
+        document.getElementById("loading").innerHTML =
+          '<p class="error msg">Database error (' + res.status + '): ' + text + '</p>';
+        return;
+      }
+
+      const rows = await res.json();
+      document.getElementById("loading").classList.add("hidden");
+
+      if (!rows || rows.length === 0) {
+        document.getElementById("registerForm").classList.remove("hidden");
+      } else {
+        const data = rows[0];
+        document.getElementById("itemDesc").innerText =
+          "This tag belongs to a " + data.item_type.toLowerCase() +
+          ". Send a message and the owner will get your contact info to arrange getting it back.";
+        document.getElementById("finderForm").classList.remove("hidden");
+      }
     } catch (e) {
       document.getElementById("loading").innerHTML =
         '<p class="error msg">Connection error: ' + e.message + '</p>';
-      return;
     }
-
-    if (error) {
-      document.getElementById("loading").innerHTML =
-        '<p class="error msg">Database error: ' + error.message + '</p>';
-      return;
-    }
-
-    document.getElementById("loading").classList.add("hidden");
-
-    if (!data) {
-      document.getElementById("registerForm").classList.remove("hidden");
-    } else {
-      document.getElementById("itemDesc").innerText =
-        "This tag belongs to a " + data.item_type.toLowerCase() +
-        ". Send a message and the owner will get your contact info to arrange getting it back.";
-      document.getElementById("finderForm").classList.remove("hidden");
-    }
-   } catch (outerErr) {
-     document.getElementById("loading").innerHTML =
-       '<p class="error msg">Unexpected error: ' + outerErr.message + '</p>';
-   }
   }
 
   async function registerTag() {
@@ -184,18 +162,21 @@
       return;
     }
 
-    const { error } = await supabase.from("tags").insert({
-      tag_id: tagId,
-      item_type,
-      owner_name,
-      owner_email,
-    });
+    try {
+      const res = await fetch(SUPABASE_URL + "/rest/v1/tags", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ tag_id: tagId, item_type, owner_name, owner_email }),
+      });
 
-    if (error) {
-      msgEl.innerHTML = '<span class="error">Something went wrong. Try again.</span>';
-      console.error(error);
-    } else {
+      if (!res.ok) {
+        const text = await res.text();
+        msgEl.innerHTML = '<span class="error">' + text + '</span>';
+        return;
+      }
       msgEl.innerHTML = '<span class="success">Tag activated. You\'re all set.</span>';
+    } catch (e) {
+      msgEl.innerHTML = '<span class="error">' + e.message + '</span>';
     }
   }
 
@@ -209,17 +190,21 @@
       return;
     }
 
-    const { error } = await supabase.from("messages").insert({
-      tag_id: tagId,
-      message,
-      finder_contact,
-    });
+    try {
+      const res = await fetch(SUPABASE_URL + "/rest/v1/messages", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ tag_id: tagId, message, finder_contact }),
+      });
 
-    if (error) {
-      msgEl.innerHTML = '<span class="error">Something went wrong. Try again.</span>';
-      console.error(error);
-    } else {
+      if (!res.ok) {
+        const text = await res.text();
+        msgEl.innerHTML = '<span class="error">' + text + '</span>';
+        return;
+      }
       msgEl.innerHTML = '<span class="success">Sent. The owner will be notified.</span>';
+    } catch (e) {
+      msgEl.innerHTML = '<span class="error">' + e.message + '</span>';
     }
   }
 

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
+<body style="font-family: sans-serif; padding: 20px; background: #1B2430; color: #EFE9DC;">
+<h2>Fetch test</h2>
+<p id="result">Testing...</p>
+<script>
+  fetch("https://jyikzrgqwtusvhprpeui.supabase.co/rest/v1/tags?select=*", {
+    headers: {
+      apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp5aWt6cmdxd3V0c3ZocHJwZXVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3ODkyMDUsImV4cCI6MjA5OTM2NTIwNX0.JmaJsIx90X_4IytNlBv-dzjcV3olPjUNc10w0dTrixE"
+    }
+  })
+    .then(r => r.text())
+    .then(t => { document.getElementById("result").innerText = "SUCCESS: " + t; })
+    .catch(e => { document.getElementById("result").innerText = "FAILED: " + e.message; });
+
+  setTimeout(() => {
+    if (document.getElementById("result").innerText === "Testing...") {
+      document.getElementById("result").innerText = "TIMED OUT — fetch never returned.";
+    }
+  }, 6000);
+</script>
+</body>
+</html>

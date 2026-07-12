@@ -101,14 +101,26 @@
 </div>
 
 <script>
+  window.addEventListener('error', function(e) {
+    document.getElementById("loading").innerHTML =
+      '<p class="error msg">Script error: ' + e.message + ' (line ' + e.lineno + ')</p>';
+  });
+
   const params = new URLSearchParams(window.location.search);
   const tagId = params.get("id");
   let supabase;
 
   async function init() {
+   try {
     if (typeof window.supabase === "undefined") {
       document.getElementById("loading").innerHTML =
         '<p class="error msg">Could not load Supabase library. Check your internet connection and try again.</p>';
+      return;
+    }
+
+    if (typeof SUPABASE_URL === "undefined" || typeof SUPABASE_ANON_KEY === "undefined") {
+      document.getElementById("loading").innerHTML =
+        '<p class="error msg">SUPABASE_URL or KEY is missing/broken — check for curly quotes in that line.</p>';
       return;
     }
 
@@ -155,6 +167,10 @@
         ". Send a message and the owner will get your contact info to arrange getting it back.";
       document.getElementById("finderForm").classList.remove("hidden");
     }
+   } catch (outerErr) {
+     document.getElementById("loading").innerHTML =
+       '<p class="error msg">Unexpected error: ' + outerErr.message + '</p>';
+   }
   }
 
   async function registerTag() {

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard - TagBack</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+
+body{
+background:#0f172a;
+color:white;
+padding:20px;
+}
+
+.container{
+max-width:600px;
+margin:auto;
+}
+
+h1{
+color:#22c55e;
+margin-bottom:8px;
+}
+
+p{
+color:#cbd5e1;
+margin-bottom:20px;
+}
+
+.card{
+background:#1e293b;
+padding:20px;
+border-radius:15px;
+margin-bottom:20px;
+}
+
+input,select{
+width:100%;
+padding:14px;
+margin-top:10px;
+border:none;
+border-radius:10px;
+background:#334155;
+color:white;
+font-size:16px;
+}
+
+button{
+width:100%;
+padding:14px;
+margin-top:15px;
+border:none;
+border-radius:10px;
+background:#22c55e;
+color:white;
+font-size:16px;
+cursor:pointer;
+}
+
+button:hover{
+background:#16a34a;
+}
+
+#result{
+margin-top:20px;
+word-break:break-all;
+}
+
+.logout{
+background:#ef4444;
+}
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+<h1>TagBack Dashboard</h1>
+
+<p>Register a new item.</p>
+
+<div class="card">
+
+<input id="itemName" placeholder="Item name (Helmet, Keys...)">
+
+<select id="category">
+<option>Helmet</option>
+<option>Keys</option>
+<option>Wallet</option>
+<option>Bag</option>
+<option>Phone</option>
+<option>Other</option>
+</select>
+
+<button id="generateBtn">
+Generate QR Tag
+</button>
+
+<div id="result"></div>
+
+</div>
+
+<button class="logout" id="logoutBtn">
+Logout
+</button>
+
+</div>
+
+<script type="module">
+
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const supabase=createClient(
+'https://jyikzrgqwtusvhprpeui.supabase.co',
+'sb_publishable_OSdTgMmkzJAOYfjUxJwC4g_ZFb_QRMQ'
+);
+
+const {data:{session}}=await supabase.auth.getSession();
+
+if(!session){
+location.href="login.html";
+}
+
+document.getElementById("generateBtn").onclick=()=>{
+
+const id=crypto.randomUUID();
+
+const url=location.origin+"/?tag="+id;
+
+document.getElementById("result").innerHTML=`
+<h3>Your QR Link</h3>
+
+<p>${url}</p>
+
+<p style="margin-top:15px;color:#22c55e;">
+(Real QR image generation comes in the next step.)
+</p>
+`;
+
+};
+
+document.getElementById("logoutBtn").onclick=async()=>{
+
+await supabase.auth.signOut();
+
+location.href="login.html";
+
+}
+
+</script>
+
+</body>
+</html>

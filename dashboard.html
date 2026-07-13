@@ -126,26 +126,52 @@ const supabase=createClient(
 const {data:{session}}=await supabase.auth.getSession();
 
 if(!session){
-location.href="login.html";
+location.href="document.getElementById("generateBtn").onclick = async () => {
+
+const itemName = document.getElementById("itemName").value.trim();
+const category = document.getElementById("category").value;
+
+if(itemName===""){
+document.getElementById("result").innerHTML="<p style='color:red;'>Please enter an item name.</p>";
+return;
 }
 
-document.getElementById("generateBtn").onclick=()=>{
+const qrId = crypto.randomUUID();
 
-const id=crypto.randomUUID();
+const { error } = await supabase
+.from("items")
+.insert([
+{
+user_id: session.user.id,
+item_name: itemName,
+category: category,
+qr_code: qrId
+}
+]);
 
-const url=location.origin+"/?tag="+id;
+if(error){
+
+document.getElementById("result").innerHTML =
+"<p style='color:red;'>"+error.message+"</p>";
+
+}else{
 
 document.getElementById("result").innerHTML=`
-<h3>Your QR Link</h3>
+<h3 style="color:#22c55e;">✅ Item Saved!</h3>
 
-<p>${url}</p>
+<p><strong>Item:</strong> ${itemName}</p>
 
-<p style="margin-top:15px;color:#22c55e;">
-(Real QR image generation comes in the next step.)
-</p>
+<p><strong>Category:</strong> ${category}</p>
+
+<p><strong>QR ID:</strong><br>${qrId}</p>
 `;
 
+document.getElementById("itemName").value="";
+
+}
+
 };
+
 
 document.getElementById("logoutBtn").onclick=async()=>{
 

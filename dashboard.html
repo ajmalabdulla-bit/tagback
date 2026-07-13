@@ -105,7 +105,13 @@ Generate QR Tag
 </button>
 
 <div id="result"></div>
+<hr style="margin:25px 0;border:1px solid #334155;">
 
+<h2 style="margin-bottom:15px;color:#22c55e;">
+My Registered Items
+</h2>
+
+<div id="itemList"></div>
 </div>
 
 <button class="logout" id="logoutBtn">
@@ -167,12 +173,65 @@ document.getElementById("result").innerHTML=`
 `;
 
 document.getElementById("itemName").value="";
-
+loadItems();
 }
 
 };
 
+async function loadItems(){
 
+const {data,error}=await supabase
+.from("items")
+.select("*")
+.eq("user_id",session.user.id)
+.order("created_at",{ascending:false});
+
+const list=document.getElementById("itemList");
+
+list.innerHTML="";
+
+if(error){
+
+list.innerHTML="<p style='color:red;'>"+error.message+"</p>";
+return;
+
+}
+
+if(data.length===0){
+
+list.innerHTML="<p>No items registered yet.</p>";
+return;
+
+}
+
+data.forEach(item=>{
+
+list.innerHTML+=`
+<div style="
+background:#334155;
+padding:15px;
+border-radius:12px;
+margin-bottom:12px;
+">
+
+<h3>${item.item_name}</h3>
+
+<p>Category: ${item.category}</p>
+
+<p style="font-size:13px;">
+QR ID:
+<br>
+${item.qr_code}
+</p>
+
+</div>
+`;
+
+});
+
+}
+
+loadItems();
 document.getElementById("logoutBtn").onclick=async()=>{
 
 await supabase.auth.signOut();

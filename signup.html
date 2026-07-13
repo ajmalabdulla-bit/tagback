@@ -28,6 +28,7 @@ max-width:380px;
 background:#1e293b;
 padding:30px;
 border-radius:18px;
+box-shadow:0 0 20px rgba(0,0,0,.4);
 }
 
 h1{
@@ -51,6 +52,7 @@ border-radius:10px;
 background:#334155;
 color:white;
 font-size:16px;
+outline:none;
 }
 
 button{
@@ -62,6 +64,7 @@ border-radius:10px;
 color:white;
 font-size:16px;
 cursor:pointer;
+transition:.3s;
 }
 
 button:hover{
@@ -76,6 +79,12 @@ text-align:center;
 a{
 color:#22c55e;
 text-decoration:none;
+}
+
+#message{
+margin-top:15px;
+text-align:center;
+font-size:15px;
 }
 </style>
 
@@ -93,17 +102,81 @@ text-decoration:none;
 
 <input id="password" type="password" placeholder="Password">
 
-<input type="password" placeholder="Confirm Password">
+<input id="confirmPassword" type="password" placeholder="Confirm Password">
 
 <button id="signupBtn">Create Account</button>
 
+<div id="message"></div>
+
 <div class="link">
-
 <a href="login.html">Already have an account? Login</a>
-
 </div>
 
 </div>
+
+<script type="module">
+
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const supabase = createClient(
+'https://jyikzrgqwtusvhprpeui.supabase.co',
+'sb_publishable_OSdTgMmkzJAOYfjUxJwC4g_ZFb_QRMQ'
+);
+
+const btn=document.getElementById("signupBtn");
+const message=document.getElementById("message");
+
+btn.onclick=async()=>{
+
+const email=document.getElementById("email").value.trim();
+const password=document.getElementById("password").value;
+const confirm=document.getElementById("confirmPassword").value;
+
+message.style.color="red";
+
+if(email===""||password===""){
+message.innerHTML="Please fill all fields.";
+return;
+}
+
+if(password.length<6){
+message.innerHTML="Password must be at least 6 characters.";
+return;
+}
+
+if(password!==confirm){
+message.innerHTML="Passwords do not match.";
+return;
+}
+
+btn.disabled=true;
+btn.innerHTML="Creating...";
+
+const {error}=await supabase.auth.signUp({
+email,
+password
+});
+
+if(error){
+
+message.innerHTML=error.message;
+btn.disabled=false;
+btn.innerHTML="Create Account";
+
+}else{
+
+message.style.color="#22c55e";
+message.innerHTML="✅ Account created! Check your email, then login.";
+
+setTimeout(()=>{
+window.location.href="login.html";
+},2500);
+
+}
+
+}
+
+</script>
 
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TagBack Login</title>
+<title>Login - TagBack</title>
 
 <style>
 *{
@@ -12,20 +12,8 @@ padding:0;
 box-sizing:border-box;
 font-family:Arial,sans-serif;
 }
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-const supabaseUrl = "https://jyikzrgqwtusvhprpeui.supabase.co";
 
-const supabaseKey = "YOUR_PUBLISHABLE_KEY";
-sb_publishable_OSdTgMmkzJAOYfjUxJwC4g_ZFb_QRMQ
-const supabase = window.supabase.createClient(
-    supabaseUrl,
-    supabaseKey
-);
-
-console.log("Supabase Connected");
-</script>
-  body{
+body{
 background:#0f172a;
 display:flex;
 justify-content:center;
@@ -40,6 +28,7 @@ max-width:380px;
 background:#1e293b;
 padding:30px;
 border-radius:18px;
+box-shadow:0 0 20px rgba(0,0,0,.4);
 }
 
 h1{
@@ -63,6 +52,7 @@ border-radius:10px;
 background:#334155;
 color:white;
 font-size:16px;
+outline:none;
 }
 
 button{
@@ -74,6 +64,7 @@ border-radius:10px;
 color:white;
 font-size:16px;
 cursor:pointer;
+transition:.3s;
 }
 
 button:hover{
@@ -89,6 +80,12 @@ a{
 color:#22c55e;
 text-decoration:none;
 }
+
+#message{
+margin-top:15px;
+text-align:center;
+font-size:15px;
+}
 </style>
 
 </head>
@@ -97,22 +94,64 @@ text-decoration:none;
 <div class="card">
 
 <h1>TagBack</h1>
+<p>Login to your account</p>
 
-<p>Owner Login</p>
+<input id="email" type="email" placeholder="Email">
 
-<input type="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
 
-<input type="password" placeholder="Password">
+<button id="loginBtn">Login</button>
 
-<button>Login</button>
+<div id="message"></div>
 
 <div class="link">
-
-<a href="signup.html">Create Account</a>
-
+<a href="signup.html">Create new account</a>
 </div>
 
 </div>
+
+<script type="module">
+
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const supabase = createClient(
+'https://jyikzrgqwtusvhprpeui.supabase.co',
+'sb_publishable_OSdTgMmkzJAOYfjUxJwC4g_ZFb_QRMQ'
+);
+
+const btn=document.getElementById("loginBtn");
+const message=document.getElementById("message");
+
+btn.onclick=async()=>{
+
+const email=document.getElementById("email").value.trim();
+const password=document.getElementById("password").value;
+
+message.style.color="red";
+
+const {error}=await supabase.auth.signInWithPassword({
+email,
+password
+});
+
+if(error){
+
+message.innerHTML=error.message;
+
+}else{
+
+message.style.color="#22c55e";
+message.innerHTML="✅ Login successful...";
+
+setTimeout(()=>{
+window.location.href="dashboard.html";
+},1000);
+
+}
+
+}
+
+</script>
 
 </body>
 </html>
